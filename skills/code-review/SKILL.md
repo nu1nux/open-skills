@@ -33,9 +33,10 @@ ${languageInstruction}
    - No args or `--staged`: Review Git staged changes (`git diff --cached`)
    - No args (no staged): Review all uncommitted changes (`git diff`)
    - File path(s): Review specified files
-   - `--commit <hash>`: Review specific commit
-2. Gather project context (language, framework, existing patterns)
-3. List files to be reviewed with change summary
+   - `--commit <hash>`: Review specific commit (`git show <hash>` to get the diff)
+2. If the diff is empty or no files match, inform the user and stop — do not produce an empty report
+3. Gather project context (language, framework, existing patterns)
+4. List files to be reviewed with change summary
 
 ### Phase 2: Multi-dimensional Analysis
 
@@ -100,7 +101,12 @@ Best Practices (MEDIUM):
    - **Critical**: Security vulnerabilities, data loss risks, breaking bugs
    - **Warning**: Code smells, potential bugs, performance issues
    - **Suggestion**: Style improvements, refactoring opportunities
-3. Note positive patterns worth highlighting
+3. Note positive patterns worth highlighting:
+   - Well-structured abstractions or clean separation of concerns
+   - Thorough error handling or defensive coding
+   - Good test coverage or meaningful test cases
+   - Effective use of design patterns appropriate to the context
+   - Clear naming, documentation, or self-documenting code
 
 ### Phase 3: Report Generation
 
@@ -176,6 +182,16 @@ Best Practices (MEDIUM):
 | `/code-review --staged` | Review only staged changes |
 | `/code-review --commit abc123` | Review specific commit |
 
+## Edge Cases
+
+| Scenario | Action |
+| -------- | ------ |
+| Empty diff / no files to review | Inform the user and stop — do not generate a report |
+| Very large scope (>20 files or >2000 lines of diff) | Summarize scope first, ask user whether to review all or focus on specific areas |
+| Generated / minified / vendor files | Skip by default; note them as skipped in the report unless user explicitly requests review |
+| Binary files in diff | Skip and note as not reviewable |
+| File outside your expertise (e.g., unfamiliar language) | Review what you can, flag uncertainty, and note the limitation in the report |
+
 ## Guidelines
 
 - Prioritize security issues - they should always be flagged as critical
@@ -184,5 +200,6 @@ Best Practices (MEDIUM):
 - Don't flag style issues that contradict project conventions
 - Include positive feedback to balance constructive criticism
 - Keep the report concise - group similar issues when appropriate
+- When reviewing a `--commit`, use `git show <hash>` to obtain the diff rather than comparing working tree state
 
 Arguments: ${args}

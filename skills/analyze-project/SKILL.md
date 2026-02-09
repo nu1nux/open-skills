@@ -20,6 +20,7 @@ ${languageInstruction}
 - **READ-ONLY** - Do not edit or create any files
 - **NO CODE GENERATION** - Only reference existing code
 - **ALWAYS CITE SOURCES** - Include `file:line` references for all code mentions
+- **SAVE REPORT** - Save analysis to `docs/analysis/YYYY-MM-DD-<project-name>.md`
 
 ## Analysis Process
 
@@ -29,10 +30,17 @@ ${languageInstruction}
 
 **Steps:**
 
-1. Find entry points (main files, CLI commands, API routes)
-2. Identify feature modules and their responsibilities
-3. List public APIs and interfaces
-4. Document configuration options
+1. Parse arguments to determine analysis scope:
+   - No args: Analyze entire project
+   - Directory path: Focus analysis on that directory
+   - `--features` / `--architecture` / `--implementation`: Run only the specified phase(s)
+2. Find entry points:
+   - Check config files for entry hints: `package.json` (`main`/`bin`/`scripts`), `Cargo.toml` (`[[bin]]`), `setup.py`/`pyproject.toml` (`entry_points`/`scripts`), `go.mod`, `Makefile`, etc.
+   - Look for common entry files: `main.*`, `index.*`, `app.*`, `cli.*`, `server.*`
+   - Identify CLI commands, API route definitions, exported modules
+3. Identify feature modules and their responsibilities
+4. List public APIs and interfaces
+5. Document configuration options
 
 ### Phase 2: Architecture Analysis
 
@@ -41,11 +49,11 @@ ${languageInstruction}
 **Steps:**
 
 1. Identify tech stack (language, runtime, framework, build tools)
-2. Analyze third-party dependencies and their purposes
+2. Analyze key third-party dependencies and their purposes (focus on 5-15 most significant; group by category if many)
 3. Map source directory structure with file purposes
 4. Identify core components and their relationships
 5. Trace data flow (input → processing → output)
-6. Identify design patterns used
+6. Identify design patterns used and whether they are applied consistently
 
 ### Phase 3: Implementation Deep Dive
 
@@ -79,12 +87,14 @@ ${languageInstruction}
 
 | Category | Technology |
 |----------|------------|
-| Language | [e.g., TypeScript 5.x] |
-| Runtime | [e.g., Node.js 20] |
-| Framework | [e.g., Express, React] |
-| Build Tool | [e.g., Vite, Webpack] |
+| Language | [e.g., Python 3.12, Go 1.22, TypeScript 5.x] |
+| Runtime | [e.g., Node.js 20, CPython, JVM 21] |
+| Framework | [e.g., Express, Django, Gin] |
+| Build Tool | [e.g., Vite, setuptools, cargo] |
 
-### Dependencies
+### Dependencies (Key)
+
+List direct dependencies critical to understanding the project. Group by category if many.
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -92,24 +102,21 @@ ${languageInstruction}
 
 ### Source Structure
 
+<!-- Adapt tree to actual project structure and language -->
 project/
 ├── src/                # Source code
 │   ├── core/           # Core business logic
-│   │   ├── index.ts    # Module entry
-│   │   └── types.ts    # Type definitions
 │   ├── utils/          # Utility functions
-│   └── index.ts        # Main entry point
+│   └── main.*          # Main entry point
 ├── tests/              # Test files
-├── package.json        # Project configuration
-└── tsconfig.json       # TypeScript configuration
+└── [config files]      # Project configuration
 
 **Key Files:**
 
 | Path | Purpose |
 |------|---------|
-| `src/index.ts` | Main entry, exports public API |
-| `src/core/` | Core business logic |
-| `src/utils/` | Shared utility functions |
+| [path to main entry] | Main entry, exports public API |
+| [path to core module] | Core business logic |
 
 ### Core Components
 
@@ -131,19 +138,43 @@ project/
 
 ### [Feature Name]
 
-- **Entry:** `file.ts:line`
-- **Code Path:** file1.ts:10 → file2.ts:25 → file3.ts:100
+- **Entry:** `file:line`
+- **Code Path:** file1:10 → file2:25 → file3:100
 - **Key Logic:** [explanation of algorithm/approach]
 - **Extension Points:** [how to customize/extend]
 ```
 
+## Edge Cases
+
+| Scenario | Action |
+| -------- | ------ |
+| Empty or near-empty project | Note limited scope, analyze what exists |
+| Monorepo with multiple packages | Summarize top-level structure, then analyze each package briefly; ask user if they want a deep dive on a specific package |
+| Very large project (>100 source files) | Focus on key entry points and core modules; note areas skipped |
+| No recognizable entry point | State this explicitly; analyze based on directory structure and config files |
+| Multiple languages | Identify all languages; organize analysis by language or component |
+| Generated / vendor / build output files | Skip by default; note as skipped |
+| Project has existing documentation (README, docs/) | Cross-reference findings against it; note discrepancies |
+
+## Usage Examples
+
+| Command | Description |
+| ------- | ----------- |
+| `/analyze-project` | Analyze the current project |
+| `/analyze-project src/` | Focus analysis on the src directory |
+| `/analyze-project --features` | Only run Feature Discovery phase |
+| `/analyze-project --architecture` | Only run Architecture Analysis phase |
+| `/analyze-project --implementation` | Only run Implementation Deep Dive phase |
+
 ## Guidelines
 
-- Use tables for structured data (features, dependencies, components)
-- Use tree diagrams for directory structure
-- Use flow notation (→) for data flow and code paths
-- Always include file:line references
-- Focus on the three dimensions: features, architecture, implementation
-- Identify patterns and design decisions
+- Start with the broadest view, then drill into details — don't get lost in implementation before understanding architecture
+- Prioritize accuracy over completeness — say "unclear" rather than guess
+- Adapt depth to project size: small projects get full analysis, large projects focus on core modules
+- When multiple patterns coexist (e.g., both MVC and event-driven), note the inconsistency
+- Identify not just what patterns are used, but whether they're applied correctly
+- Don't list every file — focus on architecturally significant files
+- If the project has documentation, cross-reference your findings against it
+- Use tables for structured data, tree diagrams for directories, flow notation (→) for data flow
 
 Arguments: ${args}
